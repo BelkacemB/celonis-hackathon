@@ -21,6 +21,17 @@ def find_data(model):
 
 print(find_data("3630075d-34fc-4780-90b6-82f5372a7369")) """
 
+
+# Function that takes in a model and returns the table names in the model
+def get_tables(model):
+    tables = []
+    for table in model.tables:
+        tables.append(table.name)
+    return tables
+
+
+print(get_tables(model))
+
 # Function that returns each column in a table from a model.tables
 
 
@@ -31,14 +42,19 @@ def get_columns(model):
             columns.append(column['name'])
     return columns
 
+# Function that takes in a table name and column name then returns a PQL query that will return the data in the table with the column name
 
-print(get_columns(model))
+
+def get_query(table, column):
+    q = pql.PQL()
+    q += pql.PQLColumn(f"VARIANT({table})", "Variant")
+    q += pql.PQLColumn("CLUSTER_VARIANTS( VARIANT({table}), 2, 2)", "Cluster")
 
 
 """ q = pql.PQL()
 q += pql.PQLColumn("VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACTIVITY_EN)", "Variant")
-q += pql.PQLColumn("CLUSTER_VARIANTS( VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACTIVITY_EN), 2, 2)", "Cluster")
+q += pql.PQLColumn("CLUSTER_VARIANTS( VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACTIVITY_EN), 2, 2)", "Cluster")"""
 
-df = model.get_data_frame(q)
+#df = model.get_data_frame(q)
 
-df.to_csv("clusterized.csv") """
+# df.to_csv("clusterized_test.csv")
