@@ -29,19 +29,27 @@ def get_tables(model):
         tables.append(table.name)
     return tables
 
-# Function that returns each column in a table from a model.tables
+# Function that returns a column for a table
 
 
-def get_columns(model):
+def get_columns_for_table(table):
     columns = []
-    for table in model.tables:
-        for column in table.columns:
-            columns.append(column['name'])
+    for column in table.columns:
+        columns.append(column['name'])
     return columns
 
+# Function that returns each column in a datamodel as a dictionary
+def get_columns_for_model(model):
+    columns = {}
+    for table in model.tables:
+        specific_table = []
+        for column in table.columns:
+            specific_table.append(column['name'])
+        columns[table.name] = specific_table
+    return columns
+
+
 # Function that takes in a table name and column name then returns a PQL query that will return the data in the table with the column name
-
-
 def get_query(table, column):
     q = pql.PQL()
     q += pql.PQLColumn(f"VARIANT({table}.{column})", "Variant")
@@ -73,7 +81,7 @@ def get_data(model):
         model.get_data_frame(query).to_csv(f"{query}.csv")
 
 
-get_data(model)
+# get_data(model)
 
 """ q = pql.PQL()
 q += pql.PQLColumn("VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACTIVITY_EN)", "Variant")
