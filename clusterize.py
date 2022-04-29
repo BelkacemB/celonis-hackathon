@@ -24,27 +24,17 @@ print(find_data("3630075d-34fc-4780-90b6-82f5372a7369")) """
 
 # Function that takes in a model and returns the table names in the model
 def get_tables(model):
-    tables = []
-    for table in model.tables:
-        tables.append(table.name)
-    return tables
+    return [table.name for table in model.tables]
 
 # Function that returns a column for a table
-
-
 def get_columns_for_table(table):
-    columns = []
-    for column in table.columns:
-        columns.append(column['name'])
-    return columns
+    return [column['name'] for column in table.columns]
 
 # Function that returns each column in a datamodel as a dictionary
 def get_columns_for_model(model):
     columns = {}
     for table in model.tables:
-        specific_table = []
-        for column in table.columns:
-            specific_table.append(column['name'])
+        specific_table = [column['name'] for column in table.columns]
         columns[table.name] = specific_table
     return columns
 
@@ -63,18 +53,14 @@ print((get_columns(model)))
 print(get_query("_CEL_P2P_ACTIVITIES_EN_parquet", "_CASE_KEY"))"""
 
 # Function that takes in a model then returns get_query for each get_tables of the model
-
-
 def get_queries(model):
     queries = []
     for table in get_tables(model):
-        for column in get_columns(model):
-            queries.append(get_query(table, column))
+        queries.extend(get_query(table, column)
+                       for column in get_columns(model))
     return queries
 
 # Function that executes model.get_data_frame on each query outputed by get_queries
-
-
 def get_data(model):
     data = []
     for query in get_queries(model):
