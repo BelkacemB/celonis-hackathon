@@ -28,7 +28,7 @@ def get_columns(model):
     columns = []
     for table in model.tables:
         for column in table.columns:
-            columns.append(column)
+            columns.append(column['name'])
     return columns
 
 
