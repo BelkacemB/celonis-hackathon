@@ -17,3 +17,5 @@ q += pql.PQLColumn("CLUSTER_VARIANTS( VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACT
 
 df = model.get_data_frame(q)
 
+df.to_csv("clusterized.csv")
+
