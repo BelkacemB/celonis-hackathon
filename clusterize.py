@@ -29,9 +29,6 @@ def get_tables(model):
         tables.append(table.name)
     return tables
 
-
-print(get_tables(model))
-
 # Function that returns each column in a table from a model.tables
 
 
@@ -47,9 +44,36 @@ def get_columns(model):
 
 def get_query(table, column):
     q = pql.PQL()
-    q += pql.PQLColumn(f"VARIANT({table})", "Variant")
-    q += pql.PQLColumn("CLUSTER_VARIANTS( VARIANT({table}), 2, 2)", "Cluster")
+    q += pql.PQLColumn(f"VARIANT({table}.{column})", "Variant")
+    q += pql.PQLColumn(
+        "CLUSTER_VARIANTS( VARIANT({table}.{column}), 2, 2)", "Cluster")
+    return q
 
+
+""" print((get_tables(model)))
+print((get_columns(model))) 
+print(get_query("_CEL_P2P_ACTIVITIES_EN_parquet", "_CASE_KEY"))"""
+
+# Function that takes in a model then returns get_query for each get_tables of the model
+
+
+def get_queries(model):
+    queries = []
+    for table in get_tables(model):
+        for column in get_columns(model):
+            queries.append(get_query(table, column))
+    return queries
+
+# Function that executes model.get_data_frame on each query outputed by get_queries
+
+
+def get_data(model):
+    data = []
+    for query in get_queries(model):
+        model.get_data_frame(query).to_csv(f"{query}.csv")
+
+
+get_data(model)
 
 """ q = pql.PQL()
 q += pql.PQLColumn("VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACTIVITY_EN)", "Variant")
