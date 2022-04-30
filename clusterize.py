@@ -80,7 +80,8 @@ def get_queries(model):
     """
     queries = []
     for table in get_tables(model):
-        queries.extend(generate_query(table.name, column['name']) for column in get_columns_for_table(table))
+        queries.extend(generate_query(
+            table.name, column['name']) for column in get_columns_for_table(table))
 
     return queries
 
@@ -97,12 +98,16 @@ def get_data(model):
         model.get_data_frame(query).to_csv(f"{query}.csv")
 
 
-get_data(model)
+q = pql.PQL()
+#q += pql.PQL(f"TABLE {get_tables(model)[0]}")
+#q += pql.PQL(f"SELECT * from {get_tables(model)[0]};")
 
-""" q = pql.PQL()
-q += pql.PQLColumn("VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACTIVITY_EN)", "Variant")
-q += pql.PQLColumn("CLUSTER_VARIANTS( VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACTIVITY_EN), 2, 2)", "Cluster") """
 
-# df = model.get_data_frame(q)
+q += pql.PQLColumn(
+    f"VARIANT({get_table_names(model)[0]}.{get_columns_for_table(get_tables(model)[0])[2]['name']})", "Variant")
+q += pql.PQLColumn(
+    f"CLUSTER_VARIANTS( VARIANT({get_table_names(model)[0]}.{get_columns_for_table(get_tables(model)[0])[2]['name']}), 2, 2)", "Cluster")
 
-# df.to_csv("clusterized_test.csv")
+df = model.get_data_frame(q)
+print(df)
+df.to_csv("clusterized_test.csv")
