@@ -22,16 +22,33 @@ def find_data(model):
 print(find_data("3630075d-34fc-4780-90b6-82f5372a7369")) """
 
 
-# Function that takes in a model and returns the table names in the model
-def get_tables(model):
+def get_table_names(model):
+    """
+    get_table_names gets the names of the tables in a model.
+
+    :param model: datamodel from the celonis api
+    :return: list of table names in the model
+    """
     return [table.name for table in model.tables]
 
-# Function that returns a column for a table
-def get_columns_for_table(table):
-    return [column['name'] for column in table.columns]
 
-# Function that returns each column in a datamodel as a dictionary
+def get_tables(model):
+    # get_tables takes in a datamodel and returns the tables in the model
+    return model.tables
+
+
+def get_columns_for_table(table):
+    # get_columns_for_table takes in a datamodeltable and returns a list of columbs for the table
+    return table.columns
+
+
 def get_columns_for_model(model):
+    """
+    get_columns_for_model gets all columns from a celonis datamodel.
+
+    :param model: datamodel from the celonis api
+    :return: dictionary with table names as keys and lists of column names as values
+    """
     columns = {}
     for table in model.tables:
         specific_table = [column['name'] for column in table.columns]
@@ -39,40 +56,53 @@ def get_columns_for_model(model):
     return columns
 
 
-# Function that takes in a table name and column name then returns a PQL query that will return the data in the table with the column name
-def get_query(table, column):
+def generate_query(table_name, column_name):
+    """
+    generate_query generates a query for a specific table and column.
+
+    :param table_name: name of a table in the datamodel
+    :param column_name: name of a column in the table
+    :return: query for the table and column
+    """
     q = pql.PQL()
-    q += pql.PQLColumn(f"VARIANT({table}.{column})", "Variant")
+    q += pql.PQLColumn(f"VARIANT({table_name}.{column_name})", "Variant")
     q += pql.PQLColumn(
-        "CLUSTER_VARIANTS( VARIANT({table}.{column}), 2, 2)", "Cluster")
+        f"CLUSTER_VARIANTS( VARIANT({table_name}.{column_name}), 2, 2)", "Cluster")
     return q
 
 
-""" print((get_tables(model)))
-print((get_columns(model))) 
-print(get_query("_CEL_P2P_ACTIVITIES_EN_parquet", "_CASE_KEY"))"""
-
-# Function that takes in a model then returns get_query for each get_tables of the model
 def get_queries(model):
+    """
+    get_queries gets all possible queries for a celonis datamodel.
+
+    :param model: datamodel from the celonis api
+    :return: list of queries
+    """
     queries = []
     for table in get_tables(model):
-        queries.extend(get_query(table, column)
-                       for column in get_columns(model))
+        queries.extend(generate_query(table.name, column['name']) for column in get_columns_for_table(table))
+
     return queries
 
-# Function that executes model.get_data_frame on each query outputed by get_queries
+
 def get_data(model):
+    """
+    get_data gets all data from a celonis datamodel and saves them as a csv.
+
+    :param model: datamodel from the celonis api
+    :return: none
+    """
     data = []
     for query in get_queries(model):
         model.get_data_frame(query).to_csv(f"{query}.csv")
 
 
-# get_data(model)
+get_data(model)
 
 """ q = pql.PQL()
 q += pql.PQLColumn("VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACTIVITY_EN)", "Variant")
-q += pql.PQLColumn("CLUSTER_VARIANTS( VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACTIVITY_EN), 2, 2)", "Cluster")"""
+q += pql.PQLColumn("CLUSTER_VARIANTS( VARIANT(_CEL_P2P_ACTIVITIES_EN_parquet.ACTIVITY_EN), 2, 2)", "Cluster") """
 
-#df = model.get_data_frame(q)
+# df = model.get_data_frame(q)
 
 # df.to_csv("clusterized_test.csv")
