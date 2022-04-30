@@ -10,8 +10,6 @@ celonis = get_celonis(
     key_type="USER_KEY"
 )
 
-model = celonis.datamodels.find("3630075d-34fc-4780-90b6-82f5372a7369")
-
 """ # Function that takes a Celonis data model and uses the PQL query language to find all the data in the model then returns it as a list
 def find_data(model):
     query = pql.Query(model)
@@ -20,6 +18,19 @@ def find_data(model):
     return data
 
 print(find_data("3630075d-34fc-4780-90b6-82f5372a7369")) """
+
+
+def get_datamodel(id):
+    """
+    get_datamodel gets a datamodel from the celonis api and returns it.
+
+    :param id: id of the datamodel
+    :return: datamodel
+    """
+    return celonis.datamodels.find(id)
+
+
+model = get_datamodel("3630075d-34fc-4780-90b6-82f5372a7369")
 
 
 def get_table_names(model):
@@ -56,7 +67,7 @@ def get_columns_for_model(model):
     return columns
 
 
-def generate_query(table_name, column_name):
+def generate_query(table_name, column_name, points=2, radius=2):
     """
     generate_query generates a query for a specific table and column.
 
@@ -64,10 +75,26 @@ def generate_query(table_name, column_name):
     :param column_name: name of a column in the table
     :return: query for the table and column
     """
+    if radius < 0 or radius > 5:
+        # Throw an error if the radius is not between 0 and 5
+        raise ValueError("Radius must be between 0 and 5")
+
+    p = pql.PQL()
+    number_of_values = 1
+    recursion_depth = 1
+
+    # If recursion_depth or number_of_values is less than 1, throw an error
+    if recursion_depth < 1 or number_of_values < 1:
+        raise ValueError(
+            "Recursion depth and number of values must be greater than 0")
+
+    p += pql.PQL(
+        f"ESTIMATE_CLUSTER_PARAMS ({table_name}.{column_name}, {radius}, {number_of_values}, {recursion_depth} )")
+
     q = pql.PQL()
     q += pql.PQLColumn(f"VARIANT({table_name}.{column_name})", "Variant")
     q += pql.PQLColumn(
-        f"CLUSTER_VARIANTS( VARIANT({table_name}.{column_name}), 2, 2)", "Cluster")
+        f"CLUSTER_VARIANTS( VARIANT({table_name}.{column_name}), {points}, {radius})", "Cluster")
     return q
 
 
@@ -98,16 +125,17 @@ def get_data(model):
         model.get_data_frame(query).to_csv(f"{query}.csv")
 
 
-q = pql.PQL()
-#q += pql.PQL(f"TABLE {get_tables(model)[0]}")
+#q = pql.PQL()
+#q += pql.PQL(f"{get_table_names(model)[0]}.{get_columns_for_table(get_tables(model)[0])[2]['name']}")
 #q += pql.PQL(f"SELECT * from {get_tables(model)[0]};")
 
-
-q += pql.PQLColumn(
+""" q += pql.PQLColumn(
     f"VARIANT({get_table_names(model)[0]}.{get_columns_for_table(get_tables(model)[0])[2]['name']})", "Variant")
 q += pql.PQLColumn(
-    f"CLUSTER_VARIANTS( VARIANT({get_table_names(model)[0]}.{get_columns_for_table(get_tables(model)[0])[2]['name']}), 2, 2)", "Cluster")
+    f"CLUSTER_VARIANTS( VARIANT({get_table_names(model)[0]}.{get_columns_for_table(get_tables(model)[0])[2]['name']}), 2, 1)", "Cluster") """
 
-df = model.get_data_frame(q)
-print(df)
-df.to_csv("clusterized_test.csv")
+for table in get_tables(model):
+    table.get_data_frame().to_json(f"{table.name}.json")
+#df = model.get_data_frame(q)
+# df.to_json("test.json")
+# df.to_csv("clusterized_test.csv")
